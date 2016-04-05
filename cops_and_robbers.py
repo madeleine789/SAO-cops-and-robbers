@@ -1,5 +1,8 @@
+import random
 import networkx as nx
 import matplotlib.pyplot as plt
+import pylab
+
 graph_representation = {0: [1, 4], 1: [0, 2, 5], 2: [1, 3, 6], 3: [2, 7],
                         4: [0, 5, 8], 5: [1, 4, 6, 9], 6: [2, 5, 7, 10], 7: [3, 6, 11],
                         8: [4, 9, 12], 9: [5, 8, 10, 13], 10: [6, 9, 11, 14], 11: [7, 10, 15],
@@ -76,7 +79,20 @@ class Graph:
         nx.draw_networkx_nodes(g, position, nodelist=robbers, node_color="r")
         nx.draw_networkx_nodes(g, position, nodelist=empty, node_color="k")
         nx.draw_networkx_edges(g, position)
-        plt.show()
+        nx.draw_networkx_labels(g, position)
+
+    def networkx_graph(self):
+        g = nx.Graph()
+        for source in self.graph:
+            for target in self.graph[source]:
+                g.add_edge(source, target)
+        return g
+
+    def random_walk_on_graph(self, source):
+        all_paths = nx.all_pairs_shortest_path(self.networkx_graph())
+        target = random.choice(all_paths[source].keys())
+        # Random path is at
+        return all_paths[source][target]
 
 
 class Guy:
@@ -88,9 +104,6 @@ class Guy:
     def change_position(self, new_position):
         if new_position in self.graph.graph[self.position]:
             self.position = new_position
-
-    def make_random_move(self):
-        pass
 
 
 class Cop(Guy):
@@ -106,19 +119,36 @@ class Robber(Guy):
 
 
 if __name__ == "__main__":
+    pylab.ion()
     graph = Graph(graph_representation)
 
     cop1 = Cop(3, "Janusz", graph)
-    bandit1 = Robber(5, "Miroslaw", graph)
+    robber1 = Robber(5, "Miroslaw", graph)
+    pylab.show()
+    game_on = True
+    while game_on:
+        rp_cop = graph.random_walk_on_graph(cop1.position)
+        rp_robber = graph.random_walk_on_graph(robber1.position)
 
-    graph.plot_graph()
+        for i in xrange(min(len(rp_cop), len(rp_robber))):
+            if robber1.position == cop1.position:
+                game_on = False
+                break
+            if i < len(rp_robber):
+                if rp_robber[i] != cop1.position:
+                    robber1.change_position(rp_robber[i])
+            graph.plot_graph()
+            pylab.draw()
+            plt.pause(1)
+            if robber1.position == cop1.position:
+                game_on = False
+                break
+            if i < len(rp_cop):
+                cop1.change_position(rp_cop[i])
+            graph.plot_graph()
+            pylab.draw()
+            plt.pause(1)
 
-    bandit1.change_position(6)
-
-    graph.plot_graph()
-
-    cop1.change_position(2)
-
-    graph.plot_graph()
+    print "GAME OVER!"
 
 
