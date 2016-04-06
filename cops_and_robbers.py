@@ -3,7 +3,7 @@ import networkx as nx
 import matplotlib.pyplot as plt
 import pylab
 
-graph_representation = {0: [1, 4], 1: [0, 2, 5], 2: [1, 3, 6], 3: [2, 7],
+graph_representation = {0: [1, 4], 1: [0, 2, 5], 2: [1, 3, 6], 3: [2, 7, 16],
                         4: [0, 5, 8], 5: [1, 4, 6, 9], 6: [2, 5, 7, 10], 7: [3, 6, 11],
                         8: [4, 9, 12], 9: [5, 8, 10, 13], 10: [6, 9, 11, 14], 11: [7, 10, 15],
                         12: [8, 13], 13: [9, 12, 14], 14: [10, 13, 15], 15: [11, 14],
@@ -81,6 +81,9 @@ class Graph:
         nx.draw_networkx_nodes(g, position, nodelist=empty, node_color="k")
         nx.draw_networkx_edges(g, position)
         nx.draw_networkx_labels(g, position)
+        
+    #~ def copy_graph(self):
+        #~ 
 
     def networkx_graph(self):
         g = nx.Graph()
@@ -88,12 +91,36 @@ class Graph:
             for target in self.graph[source]:
                 g.add_edge(source, target)
         return g
+        
+    def clear_networkx_graph(self, nopes):
+        print "\n!   NOPES:   !", nopes
+        g = nx.Graph()
+        neighbours = []
+        for i in nopes:
+            neighbours += self.graph[i]
+        nopes += neighbours
+        print "\n!   NOPES:   !", nopes
+        for source in self.graph:
+            if not source in nopes:
+                for target in self.graph[source]:
+                    if not target in nopes:
+                        #~ print target, not target in nopes
+                        g.add_edge(source, target)
+        return g
 
     def random_walk_on_graph(self, source):
         all_paths = nx.all_pairs_shortest_path(self.networkx_graph())
         target = random.choice(all_paths[source].keys())
         # Random path is at
         return all_paths[source][target]
+        
+    def cops_places(self):
+        places = []
+        for i in self.cops:
+            places.append(i.position)
+            print i.position
+        print "COPS: ", places
+        return places
 
 
 class Guy:
@@ -125,13 +152,26 @@ class CStrategy:
     def next_move(self, who, where): raise NotImplementedError
 
 class RRTstrategy(RStrategy):
-    def __init__(self, target):
+    def __init__(self, target, cannottouch):
         self.target = target
+        self.cannottouch = cannottouch
         print "    - choosen strategy: RRT"
     def next_move(self, who):
-        all_paths = nx.all_pairs_shortest_path(who.graph.networkx_graph())
-        all_paths[who.position]
-        if len(all_paths[who.position][self.target]) > 1: return all_paths[who.position][self.target][1]
+        all_paths = nx.all_pairs_shortest_path(who.graph.clear_networkx_graph(self.cannottouch))
+        all_paths2 = nx.all_pairs_shortest_path(who.graph.networkx_graph())
+        print who, ":"
+        if who.position in all_paths:
+            if self.target in all_paths[who.position]:
+                print all_paths[who.position][self.target], all_paths2[who.position][self.target]
+                if len(all_paths[who.position][self.target]) > 1: return all_paths[who.position][self.target][1]
+            else:
+                for i in all_paths[who.position].values(): print i
+                for i in all_paths[who.position].values():
+                    if len(i) > 1: return i[1]
+        else:
+            tmp = random.choice(all_paths2[who.position])
+            while len(tmp) < 2: tmp = random.choice(all_paths2[who.position])
+            return tmp[1]
         
 class SimpleStrategy(CStrategy):
     def __init__(self):
@@ -145,10 +185,9 @@ if __name__ == "__main__":
     pylab.ion()
     graph = Graph(graph_representation)
     
-    print "ROBBER:"
-    robber_strategy = RRTstrategy(3)
-    print "COP:"
-    cop_strategy = RRTstrategy(9)
+    #~ for i in graph.networkx_graph():
+    print graph.networkx_graph()
+    print graph.graph
 
     cop1 = Cop(10, "Janusz", graph)
     robber1 = Robber(5, "Miroslaw", graph)
@@ -157,14 +196,19 @@ if __name__ == "__main__":
     graph.plot_graph()
     pylab.draw()
     
+    print "ROBBER:"
+    robber_strategy = RRTstrategy(16, graph.cops_places())
+    print "COP:"
+    cop_strategy = RRTstrategy(9, [])
+    
     while game_on:
         rp_cop = graph.random_walk_on_graph(cop1.position)
         rp_robber = graph.random_walk_on_graph(robber1.position)
         #~ print rp_cop, rp_robber
         
         
-        
-        plt.pause(1)  
+        robber_strategy.cannottouch = graph.cops_places()
+        plt.pause(0.5)  
         if robber1.position == cop1.position:
             game_on = False
             print "GAME OVER!"
@@ -176,7 +220,8 @@ if __name__ == "__main__":
         robber1.change_position(robber_strategy.next_move(robber1))
         graph.plot_graph()
         pylab.draw()
-        plt.pause(1)
+        plt.pause(0.5)
+        
         cop_strategy.target = robber1.position
         if robber1.position == cop1.position:
             game_on = False
