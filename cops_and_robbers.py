@@ -131,7 +131,6 @@ class RRTstrategy(RStrategy):
     def next_move(self, who):
         all_paths = nx.all_pairs_shortest_path(who.graph.networkx_graph())
         all_paths[who.position]
-        print all_paths[who.position][self.target]
         if len(all_paths[who.position][self.target]) > 1: return all_paths[who.position][self.target][1]
         
 class SimpleStrategy(CStrategy):
@@ -151,7 +150,7 @@ if __name__ == "__main__":
     print "COP:"
     cop_strategy = RRTstrategy(9)
 
-    cop1 = Cop(3, "Janusz", graph)
+    cop1 = Cop(10, "Janusz", graph)
     robber1 = Robber(5, "Miroslaw", graph)
     pylab.show()
     game_on = True    
@@ -178,6 +177,7 @@ if __name__ == "__main__":
         graph.plot_graph()
         pylab.draw()
         plt.pause(1)
+        cop_strategy.target = robber1.position
         if robber1.position == cop1.position:
             game_on = False
             print "GAME OVER!"
