@@ -2,7 +2,9 @@ import random
 import networkx as nx
 import matplotlib.pyplot as plt
 import pylab
+import operator
 
+random.seed()
 graph_representation = {0: [1, 4], 1: [0, 2, 5], 2: [1, 3, 6], 3: [2, 7, 16],
                         4: [0, 5, 8], 5: [1, 4, 6, 9], 6: [2, 5, 7, 10], 7: [3, 6, 11],
                         8: [4, 9, 12], 9: [5, 8, 10, 13], 10: [6, 9, 11, 14], 11: [7, 10, 15],
@@ -76,9 +78,9 @@ class Graph:
                     robbers.append(source)
         position = nx.spectral_layout(g)
         empty = [x for x in self.graph if x not in cops and x not in robbers]
-        nx.draw_networkx_nodes(g, position, nodelist=cops, node_color="b")
         nx.draw_networkx_nodes(g, position, nodelist=robbers, node_color="r")
-        nx.draw_networkx_nodes(g, position, nodelist=empty, node_color="k")
+        nx.draw_networkx_nodes(g, position, nodelist=cops, node_color="c")
+        nx.draw_networkx_nodes(g, position, nodelist=empty, node_color="w")
         nx.draw_networkx_edges(g, position)
         nx.draw_networkx_labels(g, position)
         
@@ -93,13 +95,13 @@ class Graph:
         return g
         
     def clear_networkx_graph(self, nopes):
-        print "\n!   NOPES:   !", nopes
+        #~ print "\n!   NOPES:   !", nopes
         g = nx.Graph()
         neighbours = []
         for i in nopes:
             neighbours += self.graph[i]
         nopes += neighbours
-        print "\n!   NOPES:   !", nopes
+        #~ print "\n!   NOPES:   !", nopes
         for source in self.graph:
             if not source in nopes:
                 for target in self.graph[source]:
@@ -118,8 +120,8 @@ class Graph:
         places = []
         for i in self.cops:
             places.append(i.position)
-            print i.position
-        print "COPS: ", places
+            #~ print i.position
+        #~ print "COPS: ", places
         return places
 
 
@@ -152,18 +154,87 @@ class CStrategy:
     def next_move(self, who, where): raise NotImplementedError
 
 class RRTstrategy(RStrategy):
+    def __init__(self, target):
+        self.target = target
+        print "    - choosen strategy: RRT"
+    def next_move(self, who):
+        all_paths = nx.all_pairs_shortest_path(who.graph.networkx_graph())
+        print who, ":"
+        for i in all_paths:
+            print str(i) + "##################################################3"
+            for j in all_paths[i]:
+                print "    " + str(j) + str(all_paths[i][j])
+        #~ if who.position in all_paths:
+            #~ if self.target in all_paths[who.position]:
+                #~ print all_paths[who.position][self.target], all_paths2[who.position][self.target]
+                #~ if len(all_paths[who.position][self.target]) > 1: return all_paths[who.position][self.target][1]
+            #~ else:
+                #~ for i in all_paths[who.position].values(): print i
+                #~ for i in all_paths[who.position].values():
+                    #~ if len(i) > 1: return i[1]
+        #~ else:
+            #~ tmp = random.choice(all_paths2[who.position])
+            #~ while len(tmp) < 2: tmp = random.choice(all_paths2[who.position])
+            #~ return tmp[1]
+        
+class NaiveStrategy(RStrategy):
     def __init__(self, target, cannottouch):
         self.target = target
         self.cannottouch = cannottouch
-        print "    - choosen strategy: RRT"
+        print "    - choosen strategy: Naive"
     def next_move(self, who):
         all_paths = nx.all_pairs_shortest_path(who.graph.clear_networkx_graph(self.cannottouch))
         all_paths2 = nx.all_pairs_shortest_path(who.graph.networkx_graph())
-        print who, ":"
         if who.position in all_paths:
             if self.target in all_paths[who.position]:
-                print all_paths[who.position][self.target], all_paths2[who.position][self.target]
                 if len(all_paths[who.position][self.target]) > 1: return all_paths[who.position][self.target][1]
+            else:
+                for i in all_paths[who.position].values(): print i
+                for i in all_paths[who.position].values():
+                    if len(i) > 1: return i[1]
+        else:
+            tmp = random.choice(all_paths2[who.position])
+            clock = 10
+            while len(tmp) < 2 or tmp[1] in self.cannottouch:
+                tmp = random.choice(all_paths2[who.position])
+                clock -= 1
+                if (clock == 0): break
+            if len(tmp) < 2: return tmp[1]
+            else: return tmp[0]
+
+class NaiveCopStrategy(CStrategy):
+    def __init__(self):
+        print "    - choosen strategy: NaiveCop"
+    def next_move(self, who, where):
+        all_paths = nx.all_pairs_shortest_path(who.graph.networkx_graph())
+        if len(all_paths[who.position][where]) == 2:
+            return where
+        where = who.graph.graph[where]
+        targets = {}
+        for w in where:
+            targets[w] = len(all_paths[who.position][w])
+        # The biggest number of firsts
+            #~ tmp = all_paths[who.position][w]
+            #~ if len(tmp) > 1:
+                #~ tmp = tmp[1]
+            #~ else:
+                #~ tmp = tmp[0]            
+            #~ if tmp in targets: targets[tmp] += 1
+            #~ else: targets[tmp] = 1
+        targets = sorted(targets.items(), key=operator.itemgetter(1))
+        print "TARGETS: " + str(targets)
+        for i in targets:
+            print i[1]
+            if i[1] > 1:
+                where = i[0]
+                break
+      
+        #~ where = min(targets.iteritems(), key=operator.itemgetter(1))[0]
+        print where
+        
+        if who.position in all_paths:
+            if where in all_paths[who.position]:
+                if len(all_paths[who.position][where]) > 1: return all_paths[who.position][where][1]
             else:
                 for i in all_paths[who.position].values(): print i
                 for i in all_paths[who.position].values():
@@ -197,9 +268,9 @@ if __name__ == "__main__":
     pylab.draw()
     
     print "ROBBER:"
-    robber_strategy = RRTstrategy(16, graph.cops_places())
+    robber_strategy = NaiveStrategy(16, graph.cops_places())
     print "COP:"
-    cop_strategy = RRTstrategy(9, [])
+    cop_strategy = NaiveCopStrategy()
     
     while game_on:
         rp_cop = graph.random_walk_on_graph(cop1.position)
@@ -222,7 +293,7 @@ if __name__ == "__main__":
         pylab.draw()
         plt.pause(0.5)
         
-        cop_strategy.target = robber1.position
+        #~ cop_strategy.target = random.choice(graph.graph[robber1.position])
         if robber1.position == cop1.position:
             game_on = False
             print "GAME OVER!"
@@ -231,7 +302,7 @@ if __name__ == "__main__":
             game_on = False
             print "VICTORY!"
             break
-        cop1.change_position(cop_strategy.next_move(cop1))
+        cop1.change_position(cop_strategy.next_move(cop1, robber1.position))
         graph.plot_graph()
         pylab.draw()
             
