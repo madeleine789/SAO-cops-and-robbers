@@ -1,5 +1,5 @@
 from state import State
-
+from mcts.MCTS import MCTreeSearch
 MCTS_ITERATIONS = 20000
 HIDERS_EXPLORATION = 0.2
 SEEKERS_EXPLORATION = 2
@@ -35,4 +35,4 @@ def play_a_game():
 
 
 if __name__ == '__main__':
-    pass
+    mcts = MCTreeSearch()

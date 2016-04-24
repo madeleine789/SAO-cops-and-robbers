@@ -1,11 +1,16 @@
 import random
+from aetypes import Enum
+from graph import Graph
 from mcts.player import MCTSPlayer
 
 
 class Player(MCTSPlayer):
-    def __init__(self, is_cop=True):
+    def __init__(self, is_cop=True, taxi_cards=0, bus_cards=0, underground_cards=0):
         self._position = None
         self.is_cop = is_cop
+        self.taxi_cards = taxi_cards
+        self.bus_cards = bus_cards
+        self.underground_cards = underground_cards
 
     @property
     def position(self):
@@ -15,19 +20,81 @@ class Player(MCTSPlayer):
     def position(self, position):
         self._position = position
 
-    def get_reward_from_terminal_state(self, terminal_state):
-        pass
-
     def get_to_terminal_state(self, state):
         pass
 
+    def get_card(self, transport):
+        if transport == 'taxi':
+            self.taxi_cards += 1
+        if transport == 'bus':
+            self.bus_cards += 1
+        if transport == 'underground':
+            self.underground_cards += 1
+
+    def use_card(self, transport):
+        if transport == 'taxi':
+            self.taxi_cards -= 1
+        if transport == 'bus':
+            self.bus_cards -= 1
+        if transport == 'underground':
+            self.underground_cards -= 1
+
+    def can_ride_taxi(self):
+        return self.taxi_cards > 0
+
+    def can_ride_bus(self):
+        return self.bus_cards > 0
+
+    def can_ride_underground(self):
+        return self.underground_cards > 0
+
+
+class Color(Enum):
+    BLUE, RED, YELLOW, GREEN, PINK = range(5)
+
 
 class Cop(Player):
-    pass
+    def __init__(self, color):
+        Player.__init__(is_cop=True, taxi_cards=10, bus_cards=8, underground_cards=4)
+        self.color = color
+
+    def get_reward_from_terminal_state(self, terminal_state):
+        if terminal_state.cops_won():
+            return 1
+        else:
+            return 0
+
+    def __eq__(self, other):
+        if type(other) != Cop: return False
+        return self.color == other.color
+
+    def __repr__(self):
+        return "{0} cop".format(self.color.name)
 
 
 class Robber(Player):
-    pass
+    def __init__(self):
+        Player.__init__(is_cop=False, taxi_cards=4, bus_cards=3, underground_cards=3)
+        self.double_moves = 2
+        self.black_fare_cards = 5
+
+    def use_double_move(self):
+        self.double_moves -= 1
+
+    def use_black_fare_card(self):
+        self.black_fare_cards -= 1
+
+    def has_black_fare_cards(self):
+        return self.black_fare_cards > 0
+
+    def has_double_move(self):
+        return self.double_moves > 0
+
+    def get_reward_from_terminal_state(self, terminal_state):
+        if terminal_state.robber_won():
+            return 1
+        else:
+            return 0
 
 
 POSSIBLE_POSITIONS = [0, 4, 8, 16]
@@ -36,11 +103,13 @@ DISTANCE_TO_COP = [0.196, 0.671, 0.540, 0.384, 0.196]
 
 
 class PlayersOnGraph:
-    def __init__(self, graph, players):
-        self.graph = graph.init()
+    def __init__(self, players):
+        self.graph = Graph()
         self.players = players
         self.current_player = 0
         self.current_positions = self.generate_starting_positions()
+        self.robber_possible_locations = random.shuffle(POSSIBLE_POSITIONS)
+        self.most_probable_robber_position = random.choice(self.robber_possible_locations)
 
     def generate_starting_positions(self):
         positions = set()

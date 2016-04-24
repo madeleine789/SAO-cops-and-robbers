@@ -14,9 +14,9 @@ class State(MCTSState):
         self.current_round = 1
         self.current_player = 0
         self.previous_player = self.number_of_players - 1
-        self.last_mean_of_transport = None
+        self.last_transport = None
         self.search_is_on = False
-        self.cops_are_searching = False
+        self.cops_are_searching = True
 
     def get_current_player(self):
         return self.players_on_graph.get_player_at_index(self.current_player)
@@ -36,6 +36,10 @@ class State(MCTSState):
             return self.players_on_graph.cops_most_probably_caught_robber()
         else:
             return self.players_on_graph.cops_definitely_caught_robber()
+
+    def cop_won(self, cop):
+        if self.search_is_on and self.cops_are_searching:
+            pass
 
     def is_terminal(self):
         return self.cops_won() or self.robber_won()
