@@ -2,6 +2,7 @@ import random
 from aetypes import Enum
 from graph import Graph
 from mcts.player import MCTSPlayer
+from action import Transport
 
 
 class Player(MCTSPlayer):
@@ -69,7 +70,7 @@ class Cop(Player):
         return self.color == other.color
 
     def __repr__(self):
-        return "{0} cop".format(self.color.name)
+        return "Cop {0}".format(self.color.name)
 
 
 class Robber(Player):
@@ -96,6 +97,9 @@ class Robber(Player):
         else:
             return 0
 
+    def __repr__(self):
+        return "Robber"
+
 
 POSSIBLE_POSITIONS = [0, 4, 8, 16]
 POSSIBLE_STARTING_POSITIONS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
@@ -108,8 +112,10 @@ class PlayersOnGraph:
         self.players = players
         self.current_player = 0
         self.current_positions = self.generate_starting_positions()
-        self.robber_possible_locations = random.shuffle(POSSIBLE_POSITIONS)
+        self.robber_possible_locations = filter(lambda l: l not in self.get_cops_positions(),
+                                                POSSIBLE_STARTING_POSITIONS)
         self.most_probable_robber_position = random.choice(self.robber_possible_locations)
+        self.prev_most_probable_robber_position = None
 
     def generate_starting_positions(self):
         positions = set()
@@ -119,7 +125,7 @@ class PlayersOnGraph:
                 pos = random.choice(POSSIBLE_STARTING_POSITIONS)
             positions.add(pos)
             player.position(pos)
-        return positions
+        return list(positions)
 
     def get_cops_positions(self):
         positions = self.current_positions
@@ -128,15 +134,17 @@ class PlayersOnGraph:
                 positions.remove(player.position)
         return positions
 
-    def get_robbers_positions(self):
+    def get_robber_position(self):
         positions = self.current_positions
         for player in self.players:
-            if not player.is_cop:
+            if player.is_cop:
                 positions.remove(player.position)
-        return positions
+        return positions.pop()
 
-    def generate_possible_robbers_locations(self):
-        set(POSSIBLE_STARTING_POSITIONS).difference(self.get_cops_positions())
+    def get_avg_distance_from_robber(self):
+        robber = self.get_robber_position()
+        dist = map(lambda cop: self.graph.get_shortest_distance_between_points(robber, cop), self.get_cops_positions())
+        return int(sum(dist) / len(dist))
 
     def get_player_at_index(self, i):
         return self.players[i]
@@ -152,3 +160,106 @@ class PlayersOnGraph:
 
     def cops_most_probably_caught_robber(self):
         return False
+
+    def shortest_distance_between_pos_and_cop(self, pos):
+        return min(map(lambda cop: self.graph.get_shortest_distance_between_points(pos, cop, is_cop=False),
+                       self.get_cops_positions()))
+
+    def shortest_distance_between_robber_and_pos(self, pos):
+        return self.graph.get_shortest_distance_between_points(self.most_probable_robber_position, pos, is_cop=True)
+
+    def get_most_probable_robber_position(self):
+        if not self.robber_possible_locations: return -1
+        cops = self.get_cops_positions()
+        probs = [0.0] * len(self.robber_possible_locations)
+        for i in xrange(len(self.robber_possible_locations)):
+            loc = self.robber_possible_locations[i]
+            min_dist = min(
+                map(lambda cop: self.graph.get_shortest_distance_between_points(loc, cop, is_cop=False), cops))
+            p_i = min_dist - 1 if min_dist < 6 else 4
+            probs[i] = DISTANCE_TO_COP[p_i]
+        true = True
+        chosen = 0
+        max_p = max(probs)
+        while true:
+            chosen = random.randint(0, 4)
+            if random.random() < probs[chosen] / max_p:
+                true = False
+        return self.robber_possible_locations[chosen]
+
+    def get_actions_for_position(self, pos):
+        return self.graph.get_actions_for_position(pos)
+
+    def refresh_robbers_possible_locations(self, transport):
+        new_locations = []
+        for loc in self.robber_possible_locations:
+            if transport == 'black-fare' or transport == Transport.BLACK_FARE:
+                new_locations.extend(self.graph.get_destinations_for_position(loc))
+            else:
+                new_locations.extend(self.graph.get_actions_for_position_by_transport(loc, transport))
+            return filter(lambda l: l not in self.get_cops_positions(), new_locations)
+
+    def remove_current_cop_from_possible_locations(self, cop):
+        self.robber_possible_locations.remove(self.current_positions[cop])
+        self.prev_most_probable_robber_position = self.most_probable_robber_position
+        self.most_probable_robber_position = self.get_most_probable_robber_position()
+
+    def refresh_robbers_most_probable_position(self, transport):
+        self.robber_possible_locations = self.refresh_robbers_possible_locations(transport)
+        self.prev_most_probable_robber_position = self.most_probable_robber_position
+        self.most_probable_robber_position = self.get_most_probable_robber_position()
+
+    def set_actual_as_most_probable(self):
+        self.robber_possible_locations = [self.get_robber_position()]
+        self.prev_most_probable_robber_position = self.most_probable_robber_position
+        self.most_probable_robber_position = self.get_robber_position()
+
+    def use_card(self, i, action):
+        if self.players[i].is_cop:
+            self.players[i].use_card(action.transport)
+            self.players[0].get_card(action.transport)
+        elif action.transport == 'balck-fare' or action.transport == Transport.BLACK_FARE:
+            self.players[0].use_black_fare_card()
+        else:
+            self.players[0].use_card(action.transport)
+
+    def move_player(self, i, action):
+        self.use_card(i, action)
+        self.current_positions[i] = action.destination
+
+    def move_player_from_cops_pov(self, i, action):
+        self.use_card(i, action)
+        if self.players[i].is_cop:
+            self.current_positions[i] = action.destination
+        else:
+            self.prev_most_probable_robber_position = self.most_probable_robber_position
+            self.most_probable_robber_position = action.destination
+
+    def get_available_actions_for_player(self, i):
+        possible_actions = self.graph.get_actions_for_position(self.current_positions[i])
+        possible_actions = filter(lambda a: a.destination not in self.current_positions, possible_actions)
+        if not self.players[i].can_ride_taxi:
+            possible_actions = filter(lambda a: a.transport == Transport.TAXI or a.transport == 'taxi',
+                                      possible_actions)
+        if not self.players[i].can_ride_bus:
+            possible_actions = filter(lambda a: a.transport == Transport.BUS or a.transport == 'bus', possible_actions)
+        if not self.players[i].can_ride_taxi:
+            possible_actions = filter(lambda a: a.transport == Transport.UNDERGROUND or a.transport == 'underground',
+                                      possible_actions)
+        if self.players[i].is_cop or not self.players[i].has_black_fare_card():
+            possible_actions = filter(lambda a: a.transport == Transport.BLACK_FARE or a.transport == 'black-fare',
+                                      possible_actions)
+        return possible_actions
+
+    def get_available_actions__from_cop_pov(self, i):
+        if self.players[i].is_cop:
+            return self.get_available_actions_for_player(i)
+        else:
+            return self.get_available_actions_for_player(self.most_probable_robber_position)
+
+    def __repr__(self):
+        str_rep = ""
+        for p in self.players:
+            str_rep += "{0}: position {1} [taxi: {2} | bus: {3} | underground: {4}]\n" \
+                .format(p, p.position(), p.taxi_crads, p.bus_cards, p.underground_cards)
+        return str_rep

@@ -47,10 +47,10 @@ class Graph:
         i = str(i) if type(i) == int else i
         return map(lambda action: action.destination, self.get_actions_for_position(i))
 
-    def get_shortest_distance_between_points(self, start, end, player):
+    def get_shortest_distance_between_points(self, start, end, is_cop=True):
         start = str(start) if type(start) == int else start
         end = str(end) if type(end) == int else end
-        if player.is_cop:
+        if is_cop:
             res = filter(lambda x: x[0] == end, self.distances_cops[start])
         else:
             res = filter(lambda x: x[0] == end, self.distances_robber[start])

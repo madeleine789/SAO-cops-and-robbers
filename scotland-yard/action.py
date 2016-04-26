@@ -2,7 +2,7 @@ from aetypes import Enum
 
 
 class Transport(Enum):
-    TAXI, BUS, UNDERGROUND = range(3)
+    TAXI, BUS, UNDERGROUND, BLACK_FARE = range(4)
 
 
 class Action:
