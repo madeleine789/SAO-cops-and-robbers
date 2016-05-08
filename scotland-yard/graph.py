@@ -40,6 +40,7 @@ class Graph:
         self.distances_robber = get_distances_for_a_robber()
 
     def get_actions_for_position(self, i):
+        i = i+1
         i = str(i) if type(i) == int else i
         return self.actions_for_positions[i]
 
@@ -66,10 +67,3 @@ class Graph:
     def get_destinations_for_position_by_transport(self, i, transport):
         return map(lambda x: x.destination, self.get_actions_for_position_by_transport(i, transport))
 
-g = Graph()
-p = Player(is_cop=False)
-print g.get_actions_for_position('1')
-print g.get_actions_for_position_by_transport('1', 'bus')
-print g.get_destinations_for_position_by_transport('1', 'bus')
-print g.get_destinations_for_position('1')
-print g.get_shortest_distance_between_points('1', 58, p)

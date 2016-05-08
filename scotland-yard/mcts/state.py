@@ -13,3 +13,6 @@ class MCTSState:
 
     def get_current_player(self):
         pass
+
+    def get_prev_player(self):
+        pass
