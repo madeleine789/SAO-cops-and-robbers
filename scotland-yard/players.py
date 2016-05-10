@@ -1,5 +1,5 @@
 import random
-from aetypes import Enum
+from aenum import Enum
 from graph import Graph
 from mcts.player import MCTSPlayer
 from action import Transport

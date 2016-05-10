@@ -2,6 +2,7 @@ from state import State
 from mcts.MCTS import MCTreeSearch
 from players import *
 from strategies import *
+from graph import *
 
 MCTS_ITERATIONS = 20000
 HIDERS_EXPLORATION = 0.2
@@ -64,6 +65,9 @@ def play_a_game(mcts):
 
 
 if __name__ == '__main__':
-    mcts = MCTreeSearch(iterations_count=10000)
-    for i in xrange(NUMBER_OF_GAMES):
-        play_a_game(mcts)
+    graph = Graph()
+    graph.plot_graph()
+    #mcts = MCTreeSearch(iterations_count=10000)
+    #for i in xrange(NUMBER_OF_GAMES):
+    #    play_a_game(mcts)
+  

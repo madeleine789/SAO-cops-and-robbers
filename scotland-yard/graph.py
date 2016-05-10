@@ -1,6 +1,7 @@
 import json
 from action import Action
 from players import *
+import matplotlib.pyplot as plt
 
 
 def get_actions_for_every_position():
@@ -12,6 +13,15 @@ def get_actions_for_every_position():
         for action in board[key]:
             actions[key].append(Action(action['destination'], action['transport']))
     return actions
+
+
+def get_coordinates_for_every_position():
+    with open("data/board_coordinate.json") as f:
+        board = json.loads(f.read())
+    coordinates = {}
+    for key in board.keys():
+        coordinates[key] = board[key]
+    return coordinates
 
 
 def get_distances(file):
@@ -38,6 +48,7 @@ class Graph:
         self.actions_for_positions = get_actions_for_every_position()
         self.distances_cops = get_distances_for_every_cop()
         self.distances_robber = get_distances_for_a_robber()
+        self.coordinates = get_coordinates_for_every_position()
 
     def get_actions_for_position(self, i):
         i = i+1
@@ -67,3 +78,44 @@ class Graph:
     def get_destinations_for_position_by_transport(self, i, transport):
         return map(lambda x: x.destination, self.get_actions_for_position_by_transport(i, transport))
 
+    def plot_graph(self):
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+
+        points_x = []
+        points_y = []
+        for key in self.coordinates.keys():
+            points_x.append(self.coordinates[key][0])
+            points_y.append(self.coordinates[key][1])
+
+        for start in self.actions_for_positions.keys():
+            for end in self.actions_for_positions[start]:
+                color = ""
+                if end.transport == 'taxi':
+                    color = 'y-'
+                elif end.transport == 'boat':
+                    color = 'k-'
+                elif end.transport == 'bus':
+                    color = 'g-'
+                elif end.transport == 'underground':
+                    color = 'r-'
+                coordinates_from = self.coordinates[start]
+                coordinates_to = self.coordinates[str(end.destination)]
+
+                ax.plot((coordinates_from[0], coordinates_to[0]), (coordinates_from[1], coordinates_to[1]), color)
+        points = ax.plot(points_x, points_y, 'bo', picker=5)
+
+        def onpick(event):
+            thisline = event.artist
+            xdata = thisline.get_xdata()
+            ydata = thisline.get_ydata()
+            ind = event.ind
+            points = tuple(zip(xdata[ind], ydata[ind]))
+            print('onpick points:', points)
+
+        fig.canvas.mpl_connect('pick_event', onpick)
+        plt.show()
+
+if __name__ == "__main__":
+    graph = Graph()
+    graph.plot_graph()
