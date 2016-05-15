@@ -7,7 +7,7 @@ class MCTSNode:
         self.state = state
         self.action = incoming_action
         self.visit_count = 0
-        self.reward = 0.0
+        self.reward = 0.1
         self.children = []
 
     def has_children(self):
@@ -26,7 +26,9 @@ class MCTSNode:
         return map(lambda child: child.action, self.children)
 
     def get_not_used_actions_for_current_state(self):
-        return self.state.get_available_actions_for_current_player() - self.get_used_actions_for_current_state_and_player()
+        return filter(lambda x: x not in self.get_used_actions_for_current_state_and_player(),
+                self.state.get_available_actions_for_current_player())
+
 
     def was_action_used(self, action):
         return action in self.get_used_actions_for_current_state_and_player()

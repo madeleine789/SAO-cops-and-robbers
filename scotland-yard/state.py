@@ -71,8 +71,8 @@ class State(MCTSState):
         return actions
 
     def perform_action_for_current_player(self, action):
-        if action not in self.get_available_actions_for_current_player():
-            raise Exception
+        # if action not in self.get_available_actions_for_current_player():
+        #     raise Exception
         if self.search_is_on and self.cops_are_searching:
             self.players_on_graph.move_player_from_cops_pov(self.current_player, action)
         else:
@@ -84,7 +84,7 @@ class State(MCTSState):
             else: self.players_on_graph.refresh_robbers_possible_locations(self.last_transport)
         else:
             self.players_on_graph.remove_current_cop_from_possible_locations(self.current_player)
-        if self.players_on_graph.is_player_robber(self.current_player) and self.search_is_on:
+        if self.players_on_graph.is_player_cop(self.current_player) and self.search_is_on:
             robber = self.get_prev_player()
             if robber.should_use_double_move(self.players_on_graph, self.uses_move_filtering):
                 self.current_player += 1

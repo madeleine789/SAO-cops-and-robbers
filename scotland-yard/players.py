@@ -50,9 +50,10 @@ class Player(MCTSPlayer):
         return self.underground_cards > 0
 
     def get_action_for_current_player(self, state):
-        if state.players_on_graph.players[state.current_player].is_cop:
-            return state.current_player.get_action_for_cop_from_simulation(state)
-        return state.current_player.get_action_for_robber_from_simulation(state)
+        player = state.get_current_player()
+        if player.is_cop:
+            return player.get_action_for_cop_from_simulation(state)
+        return player.get_action_for_robber_from_simulation(state)
 
     def uses_coalition_reduction_strategy(self):
         cr = filter(lambda s: isinstance(s, CoalitionReduction), self.strategy)
@@ -290,6 +291,7 @@ class PlayersOnGraph:
             self.most_probable_robber_position = action.destination
 
     def get_available_actions_for_player(self, i):
+        print i
         possible_actions = self.graph.get_actions_for_position(self.current_positions[i])
         possible_actions = filter(lambda a: a.destination not in self.current_positions, possible_actions)
         if not self.players[i].can_ride_taxi:
@@ -309,7 +311,7 @@ class PlayersOnGraph:
         if self.players[i].is_cop:
             return self.get_available_actions_for_player(i)
         else:
-            return self.get_available_actions_for_player(self.most_probable_robber_position)
+            return self.get_actions_for_position(self.most_probable_robber_position)
 
     def __repr__(self):
         str_rep = ""
