@@ -19,6 +19,8 @@ class Graph:
         self.graph = graph
         self.robbers = []
         self.cops = []
+        self.coordinates = []
+        
 
     def get_coordinates_for_every_position(self):
         with open("data/board_coordinate.json") as f:
@@ -76,6 +78,47 @@ class Graph:
                     print "B:" + robber.name,
             print
 
+    def human_robber_move(self):
+        robber_id = 0
+        if len(self.robbers) > 1:
+            print "Robbers' positions: "
+            i = 0
+            for robber_id in range(len(self.robbers)):
+                print "Robber " + str(robber_id) + ": " + self.robbers[robber_id].position
+
+            robber_id = raw_input("Please choose robber to move:")
+        robber = self.robbers[robber_id]
+
+        correct = False
+        while not correct:
+            new_position = raw_input("Now choose new position for robber: ")
+            if int(new_position) in self.graph[robber.position]:
+                correct = True
+            else:
+                print("Please choose again.")
+        robber.position = new_position
+
+    def human_cop_move(self):
+        cop_id = 0
+        if len(self.cops) > 1:
+            print "Cops' positions: "
+            i = 0
+            for cop_id in range(len(self.cops)):
+                print "Robber " + str(cop_id) + ": " + self.cops[cop_id].position
+
+            cop_id = raw_input("Please choose cop to move:")
+        cop = self.cops[cop_id]
+
+        correct = False
+        while not correct:
+            new_position = raw_input("Now choose new position for cop: ")
+            if int(new_position) in self.graph[cop.position]:
+                correct = True
+            else:
+                print("Please choose again.")
+        cop.position = new_position
+
+
     def plot_graph(self):
         self.coordinates = self.get_coordinates_for_every_position()
 
@@ -96,7 +139,7 @@ class Graph:
                 ax.plot((coordinates_from[0], coordinates_to[0]), (coordinates_from[1], coordinates_to[1]), 'k-')
         plt.axis([-1, 5, -1, 5])
 
-        points = ax.plot(points_x, points_y, 'go', picker=5)
+        points, = ax.plot(points_x, points_y, 'go', picker=5)
 
         robbers_x = []
         robbers_y = []
@@ -111,8 +154,8 @@ class Graph:
             cops_x.append(self.coordinates[str(cop.position)][0])
             cops_y.append(self.coordinates[str(cop.position)][1])
              
-        robbers = ax.plot(robbers_x, robbers_y, 'ro')
-        cops = ax.plot(cops_x, cops_y, 'bo')
+        robbers, = ax.plot(robbers_x, robbers_y, 'ro')
+        cops, = ax.plot(cops_x, cops_y, 'bo')
 
         def onpick(event):
             thisline = event.artist
@@ -120,10 +163,38 @@ class Graph:
             ydata = thisline.get_ydata()
             ind = event.ind
             points = tuple(zip(xdata[ind], ydata[ind]))
-            print('onpick points:', points)
+            #print('onpick points:', points)
+            pressed_point = 0
+            for key, value in self.coordinates.iteritems():
+                if value[0] == points[0][0] and value[1] == points[0][1]: 
+                    pressed_point = key
+            print
+            print "This is " + str(pressed_point) + " position."
 
         fig.canvas.mpl_connect('pick_event', onpick)
         plt.show()
+
+        return robbers, cops
+
+    def update(self, robbers, cops):
+        robbers_x = []
+        robbers_y = []
+        cops_x = []
+        cops_y = []
+        for robber in self.robbers:
+            robbers_x.append(self.coordinates[str(robber.position)][0])
+            robbers_y.append(self.coordinates[str(robber.position)][1])
+        for cop in self.cops:
+            cops_x.append(self.coordinates[str(cop.position)][0])
+            cops_y.append(self.coordinates[str(cop.position)][1])
+    
+        robbers.set_xdata(robbers_x)
+        robbers.set_ydata(robbers_y)
+
+        cops.set_xdata(cops_x)
+        cops.set_ydata(cops_y)
+        
+        plt.draw()
 
     """
     def plot_graph(self):

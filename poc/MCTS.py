@@ -1,7 +1,9 @@
 import random
-
 import datetime, math
+import time
 
+human_robber = True
+human_cop = True
 
 class Board:
 
@@ -187,6 +189,12 @@ class MonteCarloTreeSearch:
                 wins[(player, state)] += 1
 
 
+def computer_robber_move():
+    pass
+
+def computer_human_move():
+    pass
+
 if __name__ == '__main__':
     from cops_and_robbers import *
 
@@ -197,16 +205,34 @@ if __name__ == '__main__':
     robber1 = Robber(5, "Miroslaw", graph)
     board = Board(graph)
 
-    graph.plot_graph()
+    robbers, cops = graph.plot_graph()
+    pylab.draw()
+
+    player = "Robber"
+    while(True):
+
+        print player + " turn."
+
+        if player == "Robber":
+            if human_robber:
+                graph.human_robber_move()
+            else:
+                computer_robber_move()
+            player = "Cup"
+
+        elif player == "Cup":
+            if human_cop:
+                graph.human_cop_move()
+            else:
+                computer_cop_move()
+            player = "Robber"
+
+        graph.update(robbers, cops)
+
 
     """
     mcts = MonteCarloTreeSearch(board)
     mcts.next_best_move()
     """
 
-    pylab.draw()
-
-    pylab.show()
-
-    raw_input("BLabla")
     #plt.pause(0.5)
