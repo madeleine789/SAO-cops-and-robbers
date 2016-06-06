@@ -84,15 +84,18 @@ class Graph:
             print "Robbers' positions: "
             i = 0
             for robber_id in range(len(self.robbers)):
-                print "Robber " + str(robber_id) + ": " + self.robbers[robber_id].position
-
-            robber_id = raw_input("Please choose robber to move:")
+                print "Robber " + str(robber_id) + ": " + str(self.robbers[robber_id].position)
+            correct = False
+            while not correct:
+                robber_id = int(raw_input("Please choose robber to move:"))
+                if robber_id < len(self.robbers):
+                    correct = True
         robber = self.robbers[robber_id]
 
         correct = False
         while not correct:
-            new_position = raw_input("Now choose new position for robber: ")
-            if int(new_position) in self.graph[robber.position]:
+            new_position = int(raw_input("Now choose new position for robber: "))
+            if new_position in self.graph[robber.position]:
                 correct = True
             else:
                 print("Please choose again.")
@@ -104,15 +107,18 @@ class Graph:
             print "Cops' positions: "
             i = 0
             for cop_id in range(len(self.cops)):
-                print "Robber " + str(cop_id) + ": " + self.cops[cop_id].position
-
-            cop_id = raw_input("Please choose cop to move:")
+                print "Cop " + str(cop_id) + ": " + str(self.cops[cop_id].position)
+            correct = False
+            while not correct:
+                cop_id = int(raw_input("Please choose cop to move:"))
+                if cop_id < len(self.cops):
+                    correct = True
         cop = self.cops[cop_id]
 
         correct = False
         while not correct:
-            new_position = raw_input("Now choose new position for cop: ")
-            if int(new_position) in self.graph[cop.position]:
+            new_position = int(raw_input("Now choose new position for cop: "))
+            if new_position in self.graph[cop.position]:
                 correct = True
             else:
                 print("Please choose again.")

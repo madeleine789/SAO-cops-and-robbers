@@ -202,6 +202,7 @@ if __name__ == '__main__':
     graph = Graph(graph_representation)    
 
     cop1 = Cop(10, "Janusz", graph)
+    cop2 = Cop(14, "Jerzy", graph)
     robber1 = Robber(5, "Miroslaw", graph)
     board = Board(graph)
 
