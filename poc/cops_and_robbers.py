@@ -165,7 +165,6 @@ class RRTstrategy(RStrategy):
             for j in all_paths[i]:
                 print "    " + str(j) + str(all_paths[i][j])
 
-
 class NaiveStrategy(RStrategy):
     def __init__(self, target, cannottouch):
         self.target = target
@@ -192,26 +191,15 @@ class NaiveStrategy(RStrategy):
                 clock -= 1
                 if clock == 0:
                     break
-            if len(tmp) < 2:
+            print tmp
+            if len(tmp) > 1:
                 return tmp[1]
             else:
                 return tmp[0]                
-                
-class MonterStrategy(RStrategy):
-    def __init__(self, target, monte):
-        print "    - choosen strategy: Monter"
-        self.monte = monte
-        self.target = target
-
-    def next_move(self, who):
-        monte.update(MCTS.State(who, who.graph))
-        m = monte.next_best_move()
-        print "----------------------- Monter: " + str(m)
-        return m
         
-class MontecStrategy(CStrategy):
+class MonteStrategy(CStrategy):
     def __init__(self, monte):
-        print "    - choosen strategy: MontecStrategy"
+        print "    - choosen strategy: MonteStrategy"
         self.monte = monte
 
     def next_move(self, who, where):
@@ -280,11 +268,11 @@ if __name__ == "__main__":
     monte = MCTS.MonteCarloTreeSearch(MCTS.Board(graph))
 
     print "ROBBER:"
-    # robber_strategy = NaiveStrategy(16, graph.cops_places())
-    robber_strategy = MonterStrategy(16, monte)
+    robber_strategy = NaiveStrategy(16, graph.cops_places())
+    # robber_strategy = MonterStrategy(16, monte)
     print "COP:"
-    # cop_strategy = NaiveCopStrategy()
-    cop_strategy = MontecStrategy(monte)
+    cop_strategy = NaiveCopStrategy()
+    # cop_strategy = MonteStrategy(monte)
 
     while game_on:
         rp_cop = graph.random_walk_on_graph(cop1.position)
