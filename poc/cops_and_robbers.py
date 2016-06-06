@@ -195,8 +195,9 @@ class NaiveStrategy(RStrategy):
             if len(tmp) < 2:
                 return tmp[1]
             else:
-                return tmp[0]                
-                
+                return tmp[0]
+
+
 class MonterStrategy(RStrategy):
     def __init__(self, target, monte):
         print "    - choosen strategy: Monter"
@@ -208,7 +209,8 @@ class MonterStrategy(RStrategy):
         m = monte.next_best_move()
         print "----------------------- Monter: " + str(m)
         return m
-        
+
+
 class MontecStrategy(CStrategy):
     def __init__(self, monte):
         print "    - choosen strategy: MontecStrategy"
@@ -219,6 +221,7 @@ class MontecStrategy(CStrategy):
         m = monte.next_best_move()
         print "----------------------- Montec: " + str(m)
         return m
+
 
 class NaiveCopStrategy(CStrategy):
     def __init__(self):
@@ -280,8 +283,7 @@ if __name__ == "__main__":
     monte = MCTS.MonteCarloTreeSearch(MCTS.Board(graph))
 
     print "ROBBER:"
-    # robber_strategy = NaiveStrategy(16, graph.cops_places())
-    robber_strategy = MonterStrategy(16, monte)
+    robber_strategy = NaiveStrategy(16, graph.cops_places())
     print "COP:"
     # cop_strategy = NaiveCopStrategy()
     cop_strategy = MontecStrategy(monte)

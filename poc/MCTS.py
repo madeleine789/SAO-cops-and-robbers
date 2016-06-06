@@ -5,18 +5,13 @@ import datetime, math
 
 class Board:
 
-    def __init__(self, graph, cops_start=False):
+    def __init__(self, graph):
         self.graph = graph
-        self.cops_start = cops_start
 
     def start(self):
         # Returns a representation of the starting state of the game.
-        if self.cops_start:
-            player = random.choice(self.graph.cops)
-            return State(player, self.graph)
-        else:
-            player = random.choice(self.graph.robbers)
-            return State(player, self.graph)
+        player = random.choice(self.graph.cops)
+        return State(player, self.graph)
 
     def current_player(self, state):
         # Takes the game state and returns the current player's
@@ -116,6 +111,15 @@ class MonteCarloTreeSearch:
              p)
             for p, S in moves_states
         )
+
+        if percent_wins == 0:
+            for p, S in moves_states:
+                if S.graph.robbers[0].position in S.graph.get_adjacent_nodes(p):
+                    move = p
+                else:
+                    for pp in S.graph.get_adjacent_nodes(p):
+                        if S.graph.robbers[0].position in S.graph.get_adjacent_nodes(pp):
+                            move = p
 
         # Display the stats for each possible play.
         for x in sorted(
