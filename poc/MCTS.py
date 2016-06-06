@@ -26,10 +26,10 @@ class Board:
     def next_state(self, state, play):
         # Takes the game state, and the move to be applied.
         # Returns the new game state.
-        player = next((x for x in state.graph.cops if x.name == state.player),
-                      (x for x in state.graph.robbers if x.name == state.player))
-        print type(player)
-        (list(player)[0]).position = play
+        player = next((x for x in state.graph.cops if x.name == state.player), None)
+        player = next(x for x in state.graph.robbers if x.name == state.player) if player is None else player
+
+        player.position = play
         state.position = play
         return state
 
