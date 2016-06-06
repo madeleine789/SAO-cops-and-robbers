@@ -28,6 +28,7 @@ class Board:
         # Returns the new game state.
         player = next((x for x in state.graph.cops if x.name == state.player),
                       (x for x in state.graph.robbers if x.name == state.player))
+        print type(player)
         (list(player)[0]).position = play
         state.position = play
         return state
@@ -70,7 +71,7 @@ class MonteCarloTreeSearch:
         # statistics tables.
 
         self.max_moves = kwargs.get('max_moves', 100)
-        seconds = kwargs.get('time', 600)
+        seconds = kwargs.get('time', 2)
         self.C = kwargs.get('C', 1.4)
         self.calculation_time = datetime.timedelta(seconds=seconds)
         self.board = board

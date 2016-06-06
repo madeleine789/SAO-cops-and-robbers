@@ -3,6 +3,7 @@ import networkx as nx
 import matplotlib.pyplot as plt
 import pylab
 import operator
+import MCTS
 
 random.seed()
 graph_representation = {0: [1, 4], 1: [0, 2, 5], 2: [1, 3, 6], 3: [2, 7, 16],
@@ -194,8 +195,30 @@ class NaiveStrategy(RStrategy):
             if len(tmp) < 2:
                 return tmp[1]
             else:
-                return tmp[0]
+                return tmp[0]                
+                
+class MonterStrategy(RStrategy):
+    def __init__(self, target, monte):
+        print "    - choosen strategy: Monter"
+        self.monte = monte
+        self.target = target
 
+    def next_move(self, who):
+        monte.update(MCTS.State(who, who.graph))
+        m = monte.next_best_move()
+        print "----------------------- Monter: " + str(m)
+        return m
+        
+class MontecStrategy(CStrategy):
+    def __init__(self, monte):
+        print "    - choosen strategy: MontecStrategy"
+        self.monte = monte
+
+    def next_move(self, who, where):
+        monte.update(MCTS.State(who, who.graph))
+        m = monte.next_best_move()
+        print "----------------------- Montec: " + str(m)
+        return m
 
 class NaiveCopStrategy(CStrategy):
     def __init__(self):
@@ -240,6 +263,7 @@ class SimpleStrategy(CStrategy):
 
 
 if __name__ == "__main__":
+
     pylab.ion()
     graph = Graph(graph_representation)
 
@@ -253,10 +277,14 @@ if __name__ == "__main__":
     graph.plot_graph()
     pylab.draw()
 
+    monte = MCTS.MonteCarloTreeSearch(MCTS.Board(graph))
+
     print "ROBBER:"
-    robber_strategy = NaiveStrategy(16, graph.cops_places())
+    # robber_strategy = NaiveStrategy(16, graph.cops_places())
+    robber_strategy = MonterStrategy(16, monte)
     print "COP:"
-    cop_strategy = NaiveCopStrategy()
+    # cop_strategy = NaiveCopStrategy()
+    cop_strategy = MontecStrategy(monte)
 
     while game_on:
         rp_cop = graph.random_walk_on_graph(cop1.position)
