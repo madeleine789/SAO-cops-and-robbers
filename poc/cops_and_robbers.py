@@ -92,7 +92,7 @@ class Graph:
         g = nx.Graph()
         for source in self.graph:
             for target in self.graph[source]:
-                g.add_edge(source, target)
+                if target not in self.cops_places(): g.add_edge(source, target)
         return g
 
     def clear_networkx_graph(self, nopes):
@@ -172,30 +172,72 @@ class NaiveStrategy(RStrategy):
         print "    - choosen strategy: Naive"
 
     def next_move(self, who):
+        # for i in graph.graph:
+            # print str(i) + " : " + str(graph.graph[i])
         all_paths = nx.all_pairs_shortest_path(who.graph.clear_networkx_graph(self.cannottouch))
         all_paths2 = nx.all_pairs_shortest_path(who.graph.networkx_graph())
+        # for i in all_paths:
+            # print i
+        # print "HERE I AM: "+str(who.position)
+        
         if who.position in all_paths:
+            # print "Not random"
             if self.target in all_paths[who.position]:
                 if len(all_paths[who.position][self.target]) > 1:
+                    print "way to target available"
                     return all_paths[who.position][self.target][1]
             else:
-                for i in all_paths[who.position].values():
-                    print i
+                # for i in all_paths[who.position].values():
+                    # print i
+                print "way to target NOT available"
                 for i in all_paths[who.position].values():
                     if len(i) > 1: return i[1]
         else:
-            tmp = random.choice(all_paths2[who.position])
-            clock = 10
-            while len(tmp) < 2 or tmp[1] in self.cannottouch:
-                tmp = random.choice(all_paths2[who.position])
-                clock -= 1
-                if clock == 0:
-                    break
-            print tmp
-            if len(tmp) > 1:
-                return tmp[1]
+            temp = []
+            for i in graph.graph[who.position]:
+                if i in all_paths:
+                    temp.append(i)
+            if not temp == []:
+                if self.target in all_paths2[who.position]:
+                    dicti = {}
+                    for i in temp:
+                        dicti[i] = len(all_paths[i][self.target])
+                    # print "LONG: " + str(min(dicti, key=dicti.get)) + "  " + str(dicti)
+                    if not dicti == {}: return min(dicti, key=dicti.get)
+                    else: return []
+                    
+                else:
+                    # for i in all_paths[who.position].values():
+                        # print i
+                    print "way to target NOT available"
+                    for i in all_paths[who.position].values():
+                        if len(i) > 1: return i[1]
+            print "temp: " + str(temp)
+            # if who.position in all_paths2:
+            # print "Not random"
+            if self.target in all_paths2[who.position]:
+                if len(all_paths2[who.position][self.target]) > 1:
+                    print "random way to target available"
+                    nextep = all_paths2[who.position][self.target][1]
             else:
-                return tmp[0]                
+                # for i in all_paths[who.position].values():
+                    # print i
+                print "random way to target NOT available"
+                for i in all_paths2[who.position].values():
+                    if len(i) > 1: return i[1]
+            # tmp = random.choice(all_paths2[who.position])
+            # clock = 10
+            # print "RANDOM WALK"
+            # while len(tmp) < 2 or tmp[1] in self.cannottouch:
+                # tmp = random.choice(all_paths2[who.position])
+                # clock -= 1
+                # if clock == 0:
+                    # break
+            # print tmp
+            # if len(tmp) > 1:
+                # return tmp[1]
+            # else:
+                # return tmp[0]                
         
 class MonteStrategy(CStrategy):
     def __init__(self, monte):
@@ -221,19 +263,19 @@ class NaiveCopStrategy(CStrategy):
         for w in where:
             targets[w] = len(all_paths[who.position][w])
         targets = sorted(targets.items(), key=operator.itemgetter(1))
-        print "TARGETS: " + str(targets)
+        # print "TARGETS: " + str(targets)
         for i in targets:
-            print i[1]
+            # print i[1]
             if i[1] > 1:
                 where = i[0]
                 break
-        print where
+        # print where
 
         if who.position in all_paths:
             if where in all_paths[who.position]:
                 if len(all_paths[who.position][where]) > 1: return all_paths[who.position][where][1]
             else:
-                for i in all_paths[who.position].values(): print i
+                # for i in all_paths[who.position].values(): print i
                 for i in all_paths[who.position].values():
                     if len(i) > 1: return i[1]
         else:
@@ -251,15 +293,15 @@ class SimpleStrategy(CStrategy):
 
 
 if __name__ == "__main__":
-
+    speed = 0.1
     pylab.ion()
     graph = Graph(graph_representation)
 
     print graph.networkx_graph()
     print graph.graph
 
-    cop1 = Cop(10, "Janusz", graph)
-    robber1 = Robber(5, "Miroslaw", graph)
+    cop1 = Cop(6, "Janusz", graph)
+    robber1 = Robber(12, "Miroslaw", graph)
     pylab.show()
     game_on = True
     graph.plot_graph()
@@ -279,26 +321,30 @@ if __name__ == "__main__":
         rp_robber = graph.random_walk_on_graph(robber1.position)
 
         robber_strategy.cannottouch = graph.cops_places()
-        plt.pause(0.5)
+        plt.pause(speed)
         if robber1.position == cop1.position:
             game_on = False
+            print "after cop move:"
             print "GAME OVER!"
             break
         elif robber1.position == robber_strategy.target:
             game_on = False
+            print "after cop move:"
             print "VICTORY!"
             break
         robber1.change_position(robber_strategy.next_move(robber1))
         graph.plot_graph()
         pylab.draw()
-        plt.pause(0.5)
+        plt.pause(speed)
 
         if robber1.position == cop1.position:
             game_on = False
+            print "after robber move:"
             print "GAME OVER!"
             break
         elif robber1.position == robber_strategy.target:
             game_on = False
+            print "after robber move:"
             print "VICTORY!"
             break
         cop1.change_position(cop_strategy.next_move(cop1, robber1.position))
