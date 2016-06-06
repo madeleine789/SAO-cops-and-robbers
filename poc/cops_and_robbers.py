@@ -4,13 +4,14 @@ import matplotlib.pyplot as plt
 import pylab
 import operator
 import MCTS
+import json
 
 random.seed()
-graph_representation = {0: [1, 4], 1: [0, 2, 5], 2: [1, 3, 6], 3: [2, 7, 16],
+graph_representation = {0: [1, 4], 1: [0, 2, 5], 2: [1, 3, 6], 3: [2, 7],
                         4: [0, 5, 8], 5: [1, 4, 6, 9], 6: [2, 5, 7, 10], 7: [3, 6, 11],
                         8: [4, 9, 12], 9: [5, 8, 10, 13], 10: [6, 9, 11, 14], 11: [7, 10, 15],
-                        12: [8, 13], 13: [9, 12, 14], 14: [10, 13, 15], 15: [11, 14],
-                        16: [3]}
+                        12: [8, 13, 16], 13: [9, 12, 14], 14: [10, 13, 15], 15: [11, 14],
+                        16: [12]}
 
 
 class Graph:
@@ -18,6 +19,16 @@ class Graph:
         self.graph = graph
         self.robbers = []
         self.cops = []
+        self.coordinates = []
+        
+
+    def get_coordinates_for_every_position(self):
+        with open("data/board_coordinate.json") as f:
+            board = json.loads(f.read())
+        coordinates = {}
+        for key in board.keys():
+            coordinates[key] = board[key]
+        return coordinates
 
     def add_node(self, node):
         if node not in self.graph:
@@ -67,6 +78,131 @@ class Graph:
                     print "B:" + robber.name,
             print
 
+    def human_robber_move(self):
+        robber_id = 0
+        if len(self.robbers) > 1:
+            print "Robbers' positions: "
+            i = 0
+            for robber_id in range(len(self.robbers)):
+                print "Robber " + str(robber_id) + ": " + str(self.robbers[robber_id].position)
+            correct = False
+            while not correct:
+                robber_id = int(raw_input("Please choose robber to move:"))
+                if robber_id < len(self.robbers):
+                    correct = True
+        robber = self.robbers[robber_id]
+
+        correct = False
+        while not correct:
+            new_position = int(raw_input("Now choose new position for robber: "))
+            if new_position in self.graph[robber.position]:
+                correct = True
+            else:
+                print("Please choose again.")
+        robber.position = new_position
+
+    def human_cop_move(self):
+        cop_id = 0
+        if len(self.cops) > 1:
+            print "Cops' positions: "
+            i = 0
+            for cop_id in range(len(self.cops)):
+                print "Cop " + str(cop_id) + ": " + str(self.cops[cop_id].position)
+            correct = False
+            while not correct:
+                cop_id = int(raw_input("Please choose cop to move:"))
+                if cop_id < len(self.cops):
+                    correct = True
+        cop = self.cops[cop_id]
+
+        correct = False
+        while not correct:
+            new_position = int(raw_input("Now choose new position for cop: "))
+            if new_position in self.graph[cop.position]:
+                correct = True
+            else:
+                print("Please choose again.")
+        cop.position = new_position
+
+
+    def plot_graph(self):
+        self.coordinates = self.get_coordinates_for_every_position()
+
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+
+        points_x = []
+        points_y = []
+        
+        for key in range(0, 17):
+            points_x.append(self.coordinates[str(key)][0])
+            points_y.append(self.coordinates[str(key)][1])
+
+        for start in self.graph:
+            for end in self.graph[start]:
+                coordinates_from = self.coordinates[str(start)]
+                coordinates_to = self.coordinates[str(end)]
+                ax.plot((coordinates_from[0], coordinates_to[0]), (coordinates_from[1], coordinates_to[1]), 'k-')
+        plt.axis([-1, 5, -1, 5])
+
+        points, = ax.plot(points_x, points_y, 'wo', picker=5)
+
+        robbers_x = []
+        robbers_y = []
+        cops_x = []
+        cops_y = []
+        
+        for robber in self.robbers:
+            robbers_x.append(self.coordinates[str(robber.position)][0])
+            robbers_y.append(self.coordinates[str(robber.position)][1])
+            
+        for cop in self.cops:
+            cops_x.append(self.coordinates[str(cop.position)][0])
+            cops_y.append(self.coordinates[str(cop.position)][1])
+             
+        robbers, = ax.plot(robbers_x, robbers_y, 'ro')
+        cops, = ax.plot(cops_x, cops_y, 'bo')
+
+        def onpick(event):
+            thisline = event.artist
+            xdata = thisline.get_xdata()
+            ydata = thisline.get_ydata()
+            ind = event.ind
+            points = tuple(zip(xdata[ind], ydata[ind]))
+            #print('onpick points:', points)
+            pressed_point = 0
+            for key, value in self.coordinates.iteritems():
+                if value[0] == points[0][0] and value[1] == points[0][1]: 
+                    pressed_point = key
+            print
+            print "This is " + str(pressed_point) + " position."
+
+        fig.canvas.mpl_connect('pick_event', onpick)
+        plt.show()
+
+        return robbers, cops
+
+    def update(self, robbers, cops):
+        robbers_x = []
+        robbers_y = []
+        cops_x = []
+        cops_y = []
+        for robber in self.robbers:
+            robbers_x.append(self.coordinates[str(robber.position)][0])
+            robbers_y.append(self.coordinates[str(robber.position)][1])
+        for cop in self.cops:
+            cops_x.append(self.coordinates[str(cop.position)][0])
+            cops_y.append(self.coordinates[str(cop.position)][1])
+    
+        robbers.set_xdata(robbers_x)
+        robbers.set_ydata(robbers_y)
+
+        cops.set_xdata(cops_x)
+        cops.set_ydata(cops_y)
+        
+        plt.draw()
+
+    """
     def plot_graph(self):
         g = nx.Graph()
         cops = []
@@ -87,6 +223,8 @@ class Graph:
         nx.draw_networkx_nodes(g, position, nodelist=empty, node_color="w")
         nx.draw_networkx_edges(g, position)
         nx.draw_networkx_labels(g, position)
+    """
+
 
     def networkx_graph(self):
         g = nx.Graph()
@@ -172,27 +310,20 @@ class NaiveStrategy(RStrategy):
         print "    - choosen strategy: Naive"
 
     def next_move(self, who):
-        # for i in graph.graph:
-            # print str(i) + " : " + str(graph.graph[i])
         all_paths = nx.all_pairs_shortest_path(who.graph.clear_networkx_graph(self.cannottouch))
         all_paths2 = nx.all_pairs_shortest_path(who.graph.networkx_graph())
-        # for i in all_paths:
-            # print i
-        # print "HERE I AM: "+str(who.position)
-        
         if who.position in all_paths:
-            # print "Not random"
             if self.target in all_paths[who.position]:
                 if len(all_paths[who.position][self.target]) > 1:
-                    print "way to target available"
+                    # print "way to target available"
                     return all_paths[who.position][self.target][1]
             else:
-                # for i in all_paths[who.position].values():
-                    # print i
-                print "way to target NOT available"
+                # print "way to target NOT available"
                 for i in all_paths[who.position].values():
                     if len(i) > 1: return i[1]
         else:
+            if len(all_paths2[who.position][self.target]) == 2:
+                return self.target
             temp = []
             for i in graph.graph[who.position]:
                 if i in all_paths:
@@ -200,26 +331,24 @@ class NaiveStrategy(RStrategy):
             if not temp == []:
                 if self.target in all_paths2[who.position]:
                     dicti = {}
+                    # print
                     for i in temp:
-                        dicti[i] = len(all_paths[i][self.target])
-                    # print "LONG: " + str(min(dicti, key=dicti.get)) + "  " + str(dicti)
+                        # print str(i) + "  " + str(all_paths2[i][self.target])
+                        dicti[i] = len(all_paths2[i][self.target])
                     if not dicti == {}: return min(dicti, key=dicti.get)
                     else: return []
                     
                 else:
-                    # for i in all_paths[who.position].values():
-                        # print i
-                    print "way to target NOT available"
+                    # print "way to target NOT available"
                     for i in all_paths[who.position].values():
                         if len(i) > 1: return i[1]
             print "temp: " + str(temp)
-            # if who.position in all_paths2:
-            # print "Not random"
             if self.target in all_paths2[who.position]:
                 if len(all_paths2[who.position][self.target]) > 1:
                     print "random way to target available"
                     nextep = all_paths2[who.position][self.target][1]
             else:
+# <<<<<<< HEAD
                 # for i in all_paths[who.position].values():
                     # print i
                 print "random way to target NOT available"
@@ -249,6 +378,7 @@ class MonteStrategy(CStrategy):
         m = monte.next_best_move()
         print "----------------------- Montec: " + str(m)
         return m
+
 
 class NaiveCopStrategy(CStrategy):
     def __init__(self):
@@ -293,15 +423,15 @@ class SimpleStrategy(CStrategy):
 
 
 if __name__ == "__main__":
-    speed = 0.1
+    speed = 0.5
     pylab.ion()
     graph = Graph(graph_representation)
 
     print graph.networkx_graph()
     print graph.graph
 
-    cop1 = Cop(6, "Janusz", graph)
-    robber1 = Robber(12, "Miroslaw", graph)
+    cop1 = Cop(12, "Janusz", graph)
+    robber1 = Robber(1, "Miroslaw", graph)
     pylab.show()
     game_on = True
     graph.plot_graph()
@@ -311,7 +441,7 @@ if __name__ == "__main__":
 
     print "ROBBER:"
     robber_strategy = NaiveStrategy(16, graph.cops_places())
-    # robber_strategy = MonterStrategy(16, monte)
+    # robber_strategy = MonteStrategy(16, monte)
     print "COP:"
     cop_strategy = NaiveCopStrategy()
     # cop_strategy = MonteStrategy(monte)

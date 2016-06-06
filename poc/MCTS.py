@@ -1,22 +1,19 @@
 import random
-
 import datetime, math
+import time
 
+human_robber = True
+human_cop = True
 
 class Board:
 
-    def __init__(self, graph, cops_start=False):
+    def __init__(self, graph):
         self.graph = graph
-        self.cops_start = cops_start
 
     def start(self):
         # Returns a representation of the starting state of the game.
-        if self.cops_start:
-            player = random.choice(self.graph.cops)
-            return State(player, self.graph)
-        else:
-            player = random.choice(self.graph.robbers)
-            return State(player, self.graph)
+        player = random.choice(self.graph.cops)
+        return State(player, self.graph)
 
     def current_player(self, state):
         # Takes the game state and returns the current player's
@@ -117,6 +114,15 @@ class MonteCarloTreeSearch:
             for p, S in moves_states
         )
 
+        if percent_wins == 0:
+            for p, S in moves_states:
+                if S.graph.robbers[0].position in S.graph.get_adjacent_nodes(p):
+                    move = p
+                else:
+                    for pp in S.graph.get_adjacent_nodes(p):
+                        if S.graph.robbers[0].position in S.graph.get_adjacent_nodes(pp):
+                            move = p
+
         # Display the stats for each possible play.
         for x in sorted(
                 ((100 * self.wins.get((player, S), 0) /
@@ -183,11 +189,51 @@ class MonteCarloTreeSearch:
                 wins[(player, state)] += 1
 
 
+def computer_robber_move():
+    pass
+
+def computer_human_move():
+    pass
+
 if __name__ == '__main__':
     from cops_and_robbers import *
-    graph = Graph(graph_representation)
+
+    pylab.ion()
+    graph = Graph(graph_representation)    
+
     cop1 = Cop(10, "Janusz", graph)
+    cop2 = Cop(14, "Jerzy", graph)
     robber1 = Robber(5, "Miroslaw", graph)
     board = Board(graph)
+
+    robbers, cops = graph.plot_graph()
+    pylab.draw()
+
+    player = "Robber"
+    while(True):
+
+        print player + " turn."
+
+        if player == "Robber":
+            if human_robber:
+                graph.human_robber_move()
+            else:
+                computer_robber_move()
+            player = "Cup"
+
+        elif player == "Cup":
+            if human_cop:
+                graph.human_cop_move()
+            else:
+                computer_cop_move()
+            player = "Robber"
+
+        graph.update(robbers, cops)
+
+
+    """
     mcts = MonteCarloTreeSearch(board)
     mcts.next_best_move()
+    """
+
+    #plt.pause(0.5)
