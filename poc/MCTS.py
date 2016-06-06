@@ -189,9 +189,24 @@ class MonteCarloTreeSearch:
 
 if __name__ == '__main__':
     from cops_and_robbers import *
-    graph = Graph(graph_representation)
+
+    pylab.ion()
+    graph = Graph(graph_representation)    
+
     cop1 = Cop(10, "Janusz", graph)
     robber1 = Robber(5, "Miroslaw", graph)
     board = Board(graph)
+
+    graph.plot_graph()
+
+    """
     mcts = MonteCarloTreeSearch(board)
     mcts.next_best_move()
+    """
+
+    pylab.draw()
+
+    pylab.show()
+
+    raw_input("BLabla")
+    #plt.pause(0.5)

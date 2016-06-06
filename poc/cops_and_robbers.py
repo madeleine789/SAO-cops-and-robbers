@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import pylab
 import operator
 import MCTS
+import json
 
 random.seed()
 graph_representation = {0: [1, 4], 1: [0, 2, 5], 2: [1, 3, 6], 3: [2, 7, 16],
@@ -18,6 +19,14 @@ class Graph:
         self.graph = graph
         self.robbers = []
         self.cops = []
+
+    def get_coordinates_for_every_position(self):
+        with open("data/board_coordinate.json") as f:
+            board = json.loads(f.read())
+        coordinates = {}
+        for key in board.keys():
+            coordinates[key] = board[key]
+        return coordinates
 
     def add_node(self, node):
         if node not in self.graph:
@@ -68,6 +77,56 @@ class Graph:
             print
 
     def plot_graph(self):
+        self.coordinates = self.get_coordinates_for_every_position()
+
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+
+        points_x = []
+        points_y = []
+        
+        for key in range(0, 17):
+            points_x.append(self.coordinates[str(key)][0])
+            points_y.append(self.coordinates[str(key)][1])
+
+        for start in self.graph:
+            for end in self.graph[start]:
+                coordinates_from = self.coordinates[str(start)]
+                coordinates_to = self.coordinates[str(end)]
+                ax.plot((coordinates_from[0], coordinates_to[0]), (coordinates_from[1], coordinates_to[1]), 'k-')
+        plt.axis([-1, 5, -1, 5])
+
+        points = ax.plot(points_x, points_y, 'go', picker=5)
+
+        robbers_x = []
+        robbers_y = []
+        cops_x = []
+        cops_y = []
+        
+        for robber in self.robbers:
+            robbers_x.append(self.coordinates[str(robber.position)][0])
+            robbers_y.append(self.coordinates[str(robber.position)][1])
+            
+        for cop in self.cops:
+            cops_x.append(self.coordinates[str(cop.position)][0])
+            cops_y.append(self.coordinates[str(cop.position)][1])
+             
+        robbers = ax.plot(robbers_x, robbers_y, 'ro')
+        cops = ax.plot(cops_x, cops_y, 'bo')
+
+        def onpick(event):
+            thisline = event.artist
+            xdata = thisline.get_xdata()
+            ydata = thisline.get_ydata()
+            ind = event.ind
+            points = tuple(zip(xdata[ind], ydata[ind]))
+            print('onpick points:', points)
+
+        fig.canvas.mpl_connect('pick_event', onpick)
+        plt.show()
+
+    """
+    def plot_graph(self):
         g = nx.Graph()
         cops = []
         robbers = []
@@ -87,6 +146,8 @@ class Graph:
         nx.draw_networkx_nodes(g, position, nodelist=empty, node_color="w")
         nx.draw_networkx_edges(g, position)
         nx.draw_networkx_labels(g, position)
+    """
+
 
     def networkx_graph(self):
         g = nx.Graph()
