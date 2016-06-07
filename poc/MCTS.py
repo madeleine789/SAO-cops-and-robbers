@@ -2,7 +2,7 @@ import random
 import datetime, math
 import time
 
-from poc.board import *
+from board import *
 
 human_robber = True
 human_cop = True

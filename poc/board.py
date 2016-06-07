@@ -30,12 +30,26 @@ class Board:
         state.position = state.player.position
         return state
 
-    def legal_plays(self, state_history):
+    def legal_plays(self, state_history, strategy=True):
         # Takes a sequence of game states representing the full
         # game history, and returns the full list of moves that
         # are legal plays for the current player.
         state = state_history[-1]
-        return filter(lambda x: x != state.player.prev_position, self.graph_repr[state.position])
+
+        legal = filter(lambda x: x != state.player.prev_position, self.graph_repr[state.position]) if len(
+            self.graph_repr[state.position]) > 1 else self.graph_repr[state.position]
+
+        if strategy and len(legal) > 1:
+            result = []
+            for pos in legal:
+                if "Robber" in str(state.prev_player) and state.prev_player.position in self.graph_repr[pos]:
+                    result.append(pos)
+            if len(result) == 0:
+                return legal
+            else:
+                return result
+        else:
+            return legal
 
     def winner(self, state_history):
         # Takes a sequence of game states representing the full
@@ -58,22 +72,3 @@ class State:
     def __repr__(self):
         return "STATE: {0} on node {1}".format(self.player, self.position)
 
-
-if __name__ == '__main__':
-    graph = Graph(graph_representation)
-    cop1 = Cop(10, "Janusz", graph)
-    robber1 = Robber(5, "Miroslaw", graph)
-    board = Board(cop1, robber1)
-    legal = board.graph_repr[cop1.position]
-    print cop1.position, legal
-    state = board.next_state(State(cop1, robber1), random.choice(legal))
-    print state.prev_player.prev_position, cop1.position
-    states = [state]
-    print state.position, board.legal_plays(states)
-    state = board.next_state(State(state.player, state.prev_player), random.choice(board.legal_plays(states)))
-    states.append(state)
-    print state.prev_player, state.player
-    state = board.next_state(State(state.player, state.prev_player), random.choice(board.legal_plays(states)))
-    states.append(state)
-    print state.prev_player, state.player
-    print states
