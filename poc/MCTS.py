@@ -4,9 +4,6 @@ import time
 
 from board import *
 
-human_robber = True
-human_cop = True
-
 
 class Player:
     def __init__(self, board, *args, **kwargs):
@@ -152,48 +149,4 @@ class MonteCarloTreeSearch:
             plays[(player, state)] += 1
             if player == winner:
                 wins[(player, state)] += 1
-
-
-def computer_robber_move():
-    pass
-
-
-def computer_human_move():
-    pass
-
-
-if __name__ == '__main__':
-    from cops_and_robbers import *
-
-    pylab.ion()
-    graph = Graph(graph_representation)
-
-    cop1 = Cop(10, "Janusz", graph)
-    cop2 = Cop(14, "Jerzy", graph)
-    robber1 = Robber(5, "Miroslaw", graph)
-    board = Board(cop1, robber1)
-
-    robbers, cops = graph.plot_graph()
-    pylab.draw()
-
-    player = "Robber"
-    while (True):
-
-        print player + " turn."
-
-        if player == "Robber":
-            if human_robber:
-                graph.human_robber_move()
-            else:
-                computer_robber_move()
-            player = "Cop"
-
-        elif player == "Cop":
-            if human_cop:
-                graph.human_cop_move()
-            else:
-                computer_cop_move()
-            player = "Robber"
-
-        graph.update(robbers, cops)
 
