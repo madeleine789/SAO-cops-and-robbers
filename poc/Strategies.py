@@ -1,5 +1,7 @@
 import networkx as nx
 import MCTS
+import random
+import operator
 
 class RStrategy:
     def next_move(self, who): raise NotImplementedError
@@ -23,6 +25,49 @@ class RRTstrategy(RStrategy):
                 print "    " + str(j) + str(all_paths[i][j])
 
 
+class DiarrheaStrategy(RStrategy):
+    def __init__(self, target, graph):
+        self.target = target
+        self.graph = graph
+        self.cannottouch = graph.cops_places()
+        print "    - choosen strategy: Naive"
+
+    def next_move(self, who):
+        all_paths = nx.all_pairs_shortest_path(who.graph.clear_networkx_graph(self.cannottouch))
+        all_paths2 = nx.all_pairs_shortest_path(who.graph.networkx_graph())
+        temp = []
+        for i in self.graph.graph[who.position]:
+            if i in all_paths:
+                temp.append(i)
+        if not temp == []:
+            return random.choice(temp)
+            # for i in all_paths2[who.position].values():
+                # if len(i) > 1: return i[1]
+        
+        
+        # print "COS POSZLO NIE TAK"
+        # if who.position in all_paths:
+            # print "a"
+            # nexts = []
+            # for i in all_paths[who.position]:
+                # if len(all_paths[who.position][i]) > 1 and not all_paths[who.position][i][1] in nexts:
+                    # nexts.append(all_paths[who.position][i][1])
+            # print nexts
+            # return random.choice(nexts)
+        # else:
+            # if len(all_paths2[who.position][self.target]) == 2:
+                # print "b"
+                # return self.target
+            # temp = []
+            # for i in self.graph.graph[who.position]:
+                # if i in all_paths:
+                    # temp.append(i)
+            # if not temp == []:
+                # for i in all_paths2[who.position].values():
+                    # if len(i) > 1: return i[1]
+                # print "c"
+            # print "d"
+                
 class NaiveStrategy(RStrategy):
     def __init__(self, target, graph):
         self.target = target

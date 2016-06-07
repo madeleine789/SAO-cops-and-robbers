@@ -15,8 +15,8 @@ json_coordinate_file = "data/scotland_yard_coordination.json"
 #json_coordinate_file = "data/graph_coordination.json"
 
 scotland_yard = True
-human_cop = True
-human_robber = True
+human_cop = False
+human_robber = False
 robber_target = 16    
 
 def get_graph_representation_from_json(json_file, scotland_yard = False):
@@ -36,7 +36,7 @@ graph_representation = get_graph_representation_from_json(json_file, scotland_ya
 
 
 if __name__ == "__main__":
-    speed = 0.5
+    speed = 0.1
     pylab.ion()
 
     graph = Graph(graph_representation)
@@ -54,7 +54,7 @@ if __name__ == "__main__":
     monte = MCTS.MonteCarloTreeSearch(MCTS.Board(cop1, robber1))
 
     print "ROBBER:"
-    robber_strategy = NaiveStrategy(robber_target, graph)
+    robber_strategy = DiarrheaStrategy(robber_target, graph)
     # robber_strategy = MonteStrategy(16, monte)
     print "COP:"
     # cop_strategy = NaiveCopStrategy()
