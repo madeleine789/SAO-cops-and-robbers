@@ -2,63 +2,26 @@ import random
 import datetime, math
 import time
 
+from poc.board import *
+
 human_robber = True
 human_cop = True
 
-class Board:
 
-    def __init__(self, graph):
-        self.graph = graph
+class Player:
+    def __init__(self, board, *args, **kwargs):
+        self.board = board
+        self.player = None
+        self.states = []
 
-    def start(self):
-        # Returns a representation of the starting state of the game.
-        player = random.choice(self.graph.cops)
-        return State(player, self.graph)
+    def update(self, state):
+        self.states.append(state)
 
-    def current_player(self, state):
-        # Takes the game state and returns the current player's
-        # number.
-        return state.player
+    def display(self, state, play):
+        return self.board.display(state, play)
 
-    def next_state(self, state, play):
-        # Takes the game state, and the move to be applied.
-        # Returns the new game state.
-        player = next((x for x in state.graph.cops if x.name == state.player), None)
-        player = next(x for x in state.graph.robbers if x.name == state.player) if player is None else player
-
-        player.position = play
-        state.position = play
-        return state
-
-    def legal_plays(self, state_history):
-        # Takes a sequence of game states representing the full
-        # game history, and returns the full list of moves that
-        # are legal plays for the current player.
-        state = state_history[-1]
-        return state.graph.get_adjacent_nodes(state.position)
-
-    def winner(self, state_history):
-        # Takes a sequence of game states representing the full
-        # game history.  If the game is now won, return the player
-        # number.  If the game is still ongoing, return zero.  If
-        # the game is tied, return a different distinct value, e.g. -1.
-        state = state_history[-1]
-        if self.is_cop(state):
-            if state.position == state.graph.robbers[0].position:
-                return state.player + 'WON !!!'
-        else:
-            return 0
-
-    def is_cop(self, state):
-        if next((x for x in state.graph.cops if x.name == state.player), None) is not None: return True
-        else: return False
-
-
-class State:
-    def __init__(self, player, graph):
-        self.position = player.position
-        self.graph = graph
-        self.player = player.name
+    def winner_message(self, msg):
+        return self.board.winner_message(msg)
 
 
 class MonteCarloTreeSearch:
@@ -85,7 +48,7 @@ class MonteCarloTreeSearch:
         # Causes the AI to calculate the best move from the
         # current game state and return it.
         self.max_depth = 0
-        state = self.states[-1]
+        state = self.states[-1] if len(self.states) > 0 else board.start()
         player = self.board.current_player(state)
         legal = self.board.legal_plays(self.states[:])
 
@@ -114,14 +77,16 @@ class MonteCarloTreeSearch:
             for p, S in moves_states
         )
 
-        if percent_wins == 0:
-            for p, S in moves_states:
-                if S.graph.robbers[0].position in S.graph.get_adjacent_nodes(p):
-                    move = p
-                else:
-                    for pp in S.graph.get_adjacent_nodes(p):
-                        if S.graph.robbers[0].position in S.graph.get_adjacent_nodes(pp):
-                            move = p
+        move = random.choice(legal)
+
+        # if percent_wins == 0:
+        #     for p, S in moves_states:
+        #         if S.graph.robbers[0].position in S.graph.get_adjacent_nodes(p):
+        #             move = p
+        #         else:
+        #             for pp in S.graph.get_adjacent_nodes(p):
+        #                 if S.graph.robbers[0].position in S.graph.get_adjacent_nodes(pp):
+        #                     move = p
 
         # Display the stats for each possible play.
         for x in sorted(
@@ -192,25 +157,27 @@ class MonteCarloTreeSearch:
 def computer_robber_move():
     pass
 
+
 def computer_human_move():
     pass
+
 
 if __name__ == '__main__':
     from cops_and_robbers import *
 
     pylab.ion()
-    graph = Graph(graph_representation)    
+    graph = Graph(graph_representation)
 
     cop1 = Cop(10, "Janusz", graph)
     cop2 = Cop(14, "Jerzy", graph)
     robber1 = Robber(5, "Miroslaw", graph)
-    board = Board(graph)
+    board = Board(cop1, robber1)
 
     robbers, cops = graph.plot_graph()
     pylab.draw()
 
     player = "Robber"
-    while(True):
+    while (True):
 
         print player + " turn."
 
@@ -219,9 +186,9 @@ if __name__ == '__main__':
                 graph.human_robber_move()
             else:
                 computer_robber_move()
-            player = "Cup"
+            player = "Cop"
 
-        elif player == "Cup":
+        elif player == "Cop":
             if human_cop:
                 graph.human_cop_move()
             else:
@@ -230,10 +197,3 @@ if __name__ == '__main__':
 
         graph.update(robbers, cops)
 
-
-    """
-    mcts = MonteCarloTreeSearch(board)
-    mcts.next_best_move()
-    """
-
-    #plt.pause(0.5)
