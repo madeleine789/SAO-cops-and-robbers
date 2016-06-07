@@ -361,7 +361,8 @@ class MonteStrategy(CStrategy):
         self.robber = robber
 
     def next_move(self, who=None, where=None):
-        self.monte.update(MCTS.State(self.cop, self.robber))
+        import copy
+        self.monte.update(MCTS.State(copy.deepcopy(self.cop), copy.deepcopy(self.robber)))
         m = self.monte.next_best_move()
         # print "----------------------- Montec: " + str(m)
         return m
