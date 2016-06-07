@@ -72,22 +72,3 @@ class State:
     def __repr__(self):
         return "STATE: {0} on node {1}".format(self.player, self.position)
 
-
-if __name__ == '__main__':
-    graph = Graph(graph_representation)
-    cop1 = Cop(10, "Janusz", graph)
-    robber1 = Robber(5, "Miroslaw", graph)
-    board = Board(cop1, robber1)
-    legal = board.graph_repr[cop1.position]
-    print cop1.position, legal
-    state = board.next_state(State(cop1, robber1), random.choice(legal))
-    print state.prev_player.prev_position, cop1.position
-    states = [state]
-    print state.position, board.legal_plays(states)
-    state = board.next_state(State(state.player, state.prev_player), random.choice(board.legal_plays(states)))
-    states.append(state)
-    print state.prev_player, state.player
-    state = board.next_state(State(state.player, state.prev_player), random.choice(board.legal_plays(states)))
-    states.append(state)
-    print state.prev_player, state.player
-    print states
