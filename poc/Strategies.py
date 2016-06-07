@@ -46,7 +46,7 @@ class NaiveStrategy(RStrategy):
             if len(all_paths2[who.position][self.target]) == 2:
                 return self.target
             temp = []
-            for i in graph.graph[who.position]:
+            for i in self.graph.graph[who.position]:
                 if i in all_paths:
                     temp.append(i)
             if not temp == []:
