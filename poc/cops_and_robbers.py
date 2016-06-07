@@ -9,32 +9,36 @@ from Strategies import *
 
 
 json_file = "data/scotland_yard.json"
-json_coordinate_file = "data/scotland_yard_coordinate.json"
+json_coordinate_file = "data/scotland_yard_coordination.json"
+
+#json_file = "data/graph.json"
+#json_coordinate_file = "data/graph_coordination.json"
+
+scotland_yard = True
 human_cop = True
 human_robber = True
-graph_representation = {0: [1, 4], 1: [0, 2, 5], 2: [1, 3, 6], 3: [2, 7],
-                        4: [0, 5, 8], 5: [1, 4, 6, 9], 6: [2, 5, 7, 10], 7: [3, 6, 11],
-                        8: [4, 9, 12], 9: [5, 8, 10, 13], 10: [6, 9, 11, 14], 11: [7, 10, 15],
-                        12: [8, 13, 16], 13: [9, 12, 14], 14: [10, 13, 15], 15: [11, 14],
-                        16: [12]}
+robber_target = 16    
 
-
-def get_graph_representation_from_json(json_file):
+def get_graph_representation_from_json(json_file, scotland_yard = False):
     with open(json_file) as f:
         board = json.loads(f.read())
     graph_representation = {}
     for key in board.keys():
         graph_representation[int(key)] = []
         for destination in board[key]:
-            graph_representation[int(key)].append(int(destination["destination"]))
+            if scotland_yard:
+                graph_representation[int(key)].append(int(destination["destination"]))
+            else:
+                graph_representation[int(key)].append(int(destination))
     return graph_representation
+
+graph_representation = get_graph_representation_from_json(json_file, scotland_yard)
 
 
 if __name__ == "__main__":
     speed = 0.5
     pylab.ion()
 
-    graph_representation = get_graph_representation_from_json(json_file)
     graph = Graph(graph_representation)
 
     #print graph.networkx_graph()
@@ -44,13 +48,13 @@ if __name__ == "__main__":
     robber1 = Robber(1, "Miroslaw", graph)
     pylab.show()
     game_on = True
-    robbers, cops = graph.plot_graph(json_coordinate_file)
+    robbers, cops = graph.plot_graph(json_coordinate_file, robber_target)
     pylab.draw()
 
     monte = MCTS.MonteCarloTreeSearch(MCTS.Board(cop1, robber1))
 
     print "ROBBER:"
-    robber_strategy = NaiveStrategy(16, graph)
+    robber_strategy = NaiveStrategy(robber_target, graph)
     # robber_strategy = MonteStrategy(16, monte)
     print "COP:"
     # cop_strategy = NaiveCopStrategy()

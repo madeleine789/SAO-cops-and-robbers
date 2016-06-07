@@ -81,6 +81,7 @@ class Graph:
         robber = self.robbers[robber_id]
 
         while True:
+            print "Possible positions: " + str(self.graph[robber.position])
             new_position = int(raw_input("Now choose new position for robber: "))
             if new_position in self.graph[robber.position]:
                 robber.position = new_position
@@ -101,6 +102,7 @@ class Graph:
         cop = self.cops[cop_id]
 
         while True:
+            print "Possible positions: " + str(self.graph[cop.position])
             new_position = int(raw_input("Now choose new position for cop: "))
             if new_position in self.graph[cop.position]:
                 cop.position = new_position
@@ -108,7 +110,7 @@ class Graph:
             else:
                 print("Please choose again.")
 
-    def plot_graph(self, json_coordinate_file):
+    def plot_graph(self, json_coordinate_file, robber_target = None):
         self.coordinates = self.get_coordinates_for_every_position(json_coordinate_file)
         print "Coordinates:"
         print self.coordinates
@@ -129,15 +131,21 @@ class Graph:
             points_x.append(self.coordinates[str(key)][0])
             points_y.append(self.coordinates[str(key)][1])
 
+        
         for start in self.graph:
             for end in self.graph[start]:
                 coordinates_from = self.coordinates[str(start)]
                 coordinates_to = self.coordinates[str(end)]
                 ax.plot((coordinates_from[0], coordinates_to[0]), (coordinates_from[1], coordinates_to[1]), 'k-')
-        #plt.axis([-1, 5, -1, 5])
+
+        border_x = (max(points_x) - min(points_x)) / 5.
+        border_y = (max(points_y) - min(points_y)) / 5.
+        plt.axis([min(points_x) - border_x, max(points_x) + border_x, min(points_y) - border_y, max(points_y) + border_y])
 
         points, = ax.plot(points_x, points_y, 'wo', picker=5)
+        robber_target_point, = ax.plot(self.coordinates[str(robber_target)][0], self.coordinates[str(robber_target)][1], 'go')
 
+        
         robbers_x = []
         robbers_y = []
         cops_x = []
