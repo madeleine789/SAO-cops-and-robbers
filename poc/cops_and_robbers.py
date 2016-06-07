@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import pylab
+import json
 import operator
 import MCTS
 from Graph import Graph
@@ -7,8 +8,10 @@ from Guy import Cop, Robber
 from Strategies import *
 
 
-human_cop = False
-human_robber = False
+json_file = "data/scotland_yard.json"
+json_coordinate_file = "data/scotland_yard_coordinate.json"
+human_cop = True
+human_robber = True
 graph_representation = {0: [1, 4], 1: [0, 2, 5], 2: [1, 3, 6], 3: [2, 7],
                         4: [0, 5, 8], 5: [1, 4, 6, 9], 6: [2, 5, 7, 10], 7: [3, 6, 11],
                         8: [4, 9, 12], 9: [5, 8, 10, 13], 10: [6, 9, 11, 14], 11: [7, 10, 15],
@@ -16,20 +19,32 @@ graph_representation = {0: [1, 4], 1: [0, 2, 5], 2: [1, 3, 6], 3: [2, 7],
                         16: [12]}
 
 
+def get_graph_representation_from_json(json_file):
+    with open(json_file) as f:
+        board = json.loads(f.read())
+    graph_representation = {}
+    for key in board.keys():
+        graph_representation[int(key)] = []
+        for destination in board[key]:
+            graph_representation[int(key)].append(int(destination["destination"]))
+    return graph_representation
+
 
 if __name__ == "__main__":
     speed = 0.5
     pylab.ion()
+
+    graph_representation = get_graph_representation_from_json(json_file)
     graph = Graph(graph_representation)
 
-    print graph.networkx_graph()
-    print graph.graph
+    #print graph.networkx_graph()
+    #print graph.graph
 
     cop1 = Cop(12, "Janusz", graph)
     robber1 = Robber(1, "Miroslaw", graph)
     pylab.show()
     game_on = True
-    robbers, cops = graph.plot_graph()
+    robbers, cops = graph.plot_graph(json_coordinate_file)
     pylab.draw()
 
     monte = MCTS.MonteCarloTreeSearch(MCTS.Board(cop1, robber1))
@@ -84,4 +99,3 @@ if __name__ == "__main__":
         pylab.draw()
         graph.update(robbers, cops)
         plt.pause(speed)
-        

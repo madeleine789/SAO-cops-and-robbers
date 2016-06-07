@@ -12,8 +12,8 @@ class Graph:
         self.cops = []
         self.coordinates = []
 
-    def get_coordinates_for_every_position(self):
-        with open("data/board_coordinate.json") as f:
+    def get_coordinates_for_every_position(self, json_coordinate_file):
+        with open(json_coordinate_file) as f:
             board = json.loads(f.read())
         coordinates = {}
         for key in board.keys():
@@ -108,8 +108,16 @@ class Graph:
             else:
                 print("Please choose again.")
 
-    def plot_graph(self):
-        self.coordinates = self.get_coordinates_for_every_position()
+    def plot_graph(self, json_coordinate_file):
+        self.coordinates = self.get_coordinates_for_every_position(json_coordinate_file)
+        print "Coordinates:"
+        print self.coordinates
+
+        print
+        print
+
+        print "Graph:"
+        print self.graph
 
         fig = plt.figure()
         ax = fig.add_subplot(111)
@@ -117,7 +125,7 @@ class Graph:
         points_x = []
         points_y = []
 
-        for key in range(0, 17):
+        for key in self.coordinates.keys():
             points_x.append(self.coordinates[str(key)][0])
             points_y.append(self.coordinates[str(key)][1])
 
@@ -126,7 +134,7 @@ class Graph:
                 coordinates_from = self.coordinates[str(start)]
                 coordinates_to = self.coordinates[str(end)]
                 ax.plot((coordinates_from[0], coordinates_to[0]), (coordinates_from[1], coordinates_to[1]), 'k-')
-        plt.axis([-1, 5, -1, 5])
+        #plt.axis([-1, 5, -1, 5])
 
         points, = ax.plot(points_x, points_y, 'wo', picker=5)
 
