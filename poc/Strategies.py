@@ -8,7 +8,7 @@ class RStrategy:
 
 
 class CStrategy:
-    def next_move(self, who, where): raise NotImplementedError
+    def next_move(self, who, where=None): raise NotImplementedError
 
 
 class RRTstrategy(RStrategy):
@@ -132,7 +132,6 @@ class MonteStrategy(CStrategy):
         import copy
         self.monte.update(MCTS.State(copy.deepcopy(self.cop), copy.deepcopy(self.robber)))
         m = self.monte.next_best_move()
-        # print "----------------------- Montec: " + str(m)
         return m
 
 
@@ -165,10 +164,9 @@ class NaiveCopStrategy(CStrategy):
             while len(tmp) < 2: tmp = random.choice(all_paths2[who.position])
             return tmp[1]
 
-
-class SimpleStrategy(CStrategy):
+class RandomCopStrategy(CStrategy):
     def __init__(self):
-        print "    - choosen strategy: simple"
+        print "    - choosen strategy: RandomCop"
 
-    def next_move(self, who):
-        print ""
+    def next_move(self, who, where=None):
+        return random.choice(who.graph.graph[who.position])

@@ -11,8 +11,6 @@ class Board:
 
     def start(self):
         # Returns a representation of the starting state of the game.
-        position = random.choice(self.graph_repr.keys())
-        self.cop.position = position
         return State(self.cop, self.robber)
 
     def current_player(self, state):
@@ -34,6 +32,7 @@ class Board:
         # Takes a sequence of game states representing the full
         # game history, and returns the full list of moves that
         # are legal plays for the current player.
+
         state = state_history[-1]
 
         legal = filter(lambda x: x != state.player.prev_position, self.graph_repr[state.position]) if len(
@@ -57,10 +56,11 @@ class Board:
         # number.  If the game is still ongoing, return zero.  If
         # the game is tied, return a different distinct value, e.g. -1.
         state = state_history[-1]
-        if state.position == self.robber.position:
-            return state.player.name + ' WON !!!'
+        if "Cop" in str(state.player) and (state.position == self.robber.position or self.robber.position in self.graph_repr[state.position]):
+            # print 'COPS WON !!!'
+            return 1, state.player
         else:
-            return 0
+            return 0, state.prev_player
 
 
 class State:
@@ -71,4 +71,3 @@ class State:
 
     def __repr__(self):
         return "STATE: {0} on node {1}".format(self.player, self.position)
-

@@ -1,25 +1,23 @@
 import matplotlib.pyplot as plt
 import pylab
 import json
-import operator
-import MCTS
 from Graph import Graph
 from Guy import Cop, Robber
 from Strategies import *
 
+json_file = "./poc/data/scotland_yard.json"
+json_coordinate_file = "./poc/data/scotland_yard_coordination.json"
 
-json_file = "data/scotland_yard.json"
-json_coordinate_file = "data/scotland_yard_coordination.json"
-
-#json_file = "data/graph.json"
-#json_coordinate_file = "data/graph_coordination.json"
+# json_file = "data/graph.json"
+# json_coordinate_file = "data/graph_coordination.json"
 
 scotland_yard = True
 human_cop = False
 human_robber = False
-robber_target = 16    
+robber_target = 16
 
-def get_graph_representation_from_json(json_file, scotland_yard = False):
+
+def get_graph_representation_from_json(json_file, scotland_yard=False):
     with open(json_file) as f:
         board = json.loads(f.read())
     graph_representation = {}
@@ -32,19 +30,20 @@ def get_graph_representation_from_json(json_file, scotland_yard = False):
                 graph_representation[int(key)].append(int(destination))
     return graph_representation
 
-graph_representation = get_graph_representation_from_json(json_file, scotland_yard)
 
+graph_representation = get_graph_representation_from_json(json_file, scotland_yard)
 
 if __name__ == "__main__":
     speed = 0.1
+    N = 25
     pylab.ion()
 
     graph = Graph(graph_representation)
 
-    #print graph.networkx_graph()
-    #print graph.graph
+    # print graph.networkx_graph()
+    # print graph.graph
 
-    cop1 = Cop(12, "Janusz", graph)
+    cop1 = Cop(19, "Janusz", graph)
     robber1 = Robber(1, "Miroslaw", graph)
     pylab.show()
     game_on = True
@@ -57,25 +56,25 @@ if __name__ == "__main__":
     robber_strategy = DiarrheaStrategy(robber_target, graph)
     # robber_strategy = MonteStrategy(16, monte)
     print "COP:"
-    # cop_strategy = NaiveCopStrategy()
+    # cop_strategy = RandomCopStrategy()
     cop_strategy = MonteStrategy(monte, cop1, robber1)
-
-    while game_on:
+    moves = 0
+    while game_on and moves < N:
+        moves += 1
         if not human_cop:
             rp_cop = graph.random_walk_on_graph(cop1.position)
         if not human_robber:
             rp_robber = graph.random_walk_on_graph(robber1.position)
-
         robber_strategy.cannottouch = graph.cops_places()
-        if robber1.position == cop1.position:
+        if robber1.position == cop1.position or robber1.position in graph_representation[cop1.position]:
             game_on = False
             print "after cop move:"
-            print "GAME OVER!"
+            print "COP WON!"
             break
-        elif robber1.position == robber_strategy.target:
+        elif robber1.position == robber_strategy.target or moves == N:
             game_on = False
             print "after cop move:"
-            print "VICTORY!"
+            print "ROBBER WON!"
             break
         if not human_robber:
             robber1.change_position(robber_strategy.next_move(robber1))
@@ -85,15 +84,15 @@ if __name__ == "__main__":
         graph.update(robbers, cops)
         plt.pause(speed)
 
-        if robber1.position == cop1.position:
+        if robber1.position == cop1.position or robber1.position in graph_representation[cop1.position]:
             game_on = False
             print "after robber move:"
-            print "GAME OVER!"
+            print "COP WON!"
             break
-        elif robber1.position == robber_strategy.target:
+        elif robber1.position == robber_strategy.target or moves == N:
             game_on = False
             print "after robber move:"
-            print "VICTORY!"
+            print "ROBBER WON!"
             break
 
         if not human_cop:
